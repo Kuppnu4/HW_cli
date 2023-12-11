@@ -10,7 +10,7 @@ import sys
 import re
 
 
-CONTACTS = []
+CONTACTS = {}
 
 
 def main():
@@ -30,13 +30,23 @@ def main():
     while True:
         command = input('Enter the command: ')
         command_words = command.strip().split(' ')
+
+        for key in COMMANDS:
+
+            if key == command_words[0].lower():
+                command_words[0] = command_words[0].lower()
+            elif command_words[0] == 'show' and command_words[1].lower() == 'all':
+                command_words[1] = command_words[1].lower()
+
         for _ in filter(lambda x: x == '.', command_words):
             sys.exit()
 
-        if command_words[0].lower() in COMMANDS:
+        if command_words[0] in COMMANDS:
             line = COMMANDS[command_words[0]](*command_words[1:])
             if line:
                 print(line)
+            if line == 'goooood buy':
+                sys.exit()
         else:
             print('wrong command')
 
@@ -52,6 +62,7 @@ def input_error(func):
         '''
 
         try:
+
             return func(*args)
 
         except (KeyError, ValueError, IndexError, TypeError) as err:
@@ -79,12 +90,11 @@ def add_func(*args):
     res = ''
     if len(args) == 2 and name_regexp.match(args[0]) and number_regexp.match(args[1]):
 
-        for contact in CONTACTS:
-            if contact['name'] == args[0]:
-                raise ValueError('This contact is already in the list.\
-                                 Do you want to change the number?')
+        if args[0] in CONTACTS:
+            raise ValueError('This contact is already in the list.\
+                            Do you want to change the number?')
 
-        CONTACTS.append({'name': args[0], 'number': args[1]})
+        CONTACTS[args[0]] =  args[1]
         res = f'{args[0]} was added'
     else:
         res = 'Wrong Name_Number pattern'
@@ -103,18 +113,19 @@ def change_func(*args):
         raise KeyError('Enter ONE name and ONE number')
 
     number_regexp = re.compile(r'^\d{3,14}$')
-    name_exist = False
 
-    for contact in CONTACTS:
 
-        if contact['name'] == args[0] and number_regexp.match(args[1]):
-            contact['number'] = args[1]
-            name_exist = True
+    if not number_regexp.match(args[1]):
+        raise ValueError('Enter a correct number')
 
-        if name_exist:
-            return f'Contact {contact["name"]}: Number changed to {contact["number"]}'
 
-    raise KeyError('No such name in the list')
+    if args[0] in CONTACTS:
+        CONTACTS[args[0]] = args[1]
+
+    else:
+        raise KeyError('No such name in the list')
+
+    return f'Contact {args[0]}: Number changed to {CONTACTS[args[0]]}'
 
 
 @input_error
@@ -126,9 +137,9 @@ def phone_func(*args):
     '''
     if len(args) > 1:
         raise ValueError('Enter one name')
-    for contact in CONTACTS:
-        if contact['name'] == args[0]:
-            return contact['number']
+
+    if args[0] in CONTACTS:
+        return CONTACTS[args[0]]
 
     return 'No such name in the list'
 
@@ -143,8 +154,8 @@ def show_func(*args):
         raise ValueError('Wrong command. Did you mean "show all"')
 
     display = ''
-    for contact in CONTACTS:
-        display += f'{contact["name"]}: {contact["number"]}\n'
+    for name, number in CONTACTS.items():
+        display += f'{name}: {number}\n'
 
     return display[:-1]
 
@@ -155,8 +166,8 @@ def exit_func():
     "good bye", "close", "exit" по будь-якій з цих команд бот завершує
     свою роботу після того, як виведе у консоль "Good bye!".
     '''
-    print('goooood buy')
-    sys.exit()
+    return 'goooood buy'
+
 
 
 
