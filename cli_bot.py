@@ -13,44 +13,6 @@ import re
 CONTACTS = {}
 
 
-def main():
-    '''
-    This is the main function
-    '''
-
-    COMMANDS = {
-        'hello': hello_func,
-        'add': add_func,
-        'change': change_func,
-        'phone': phone_func,
-        'show': show_func,
-        'exit': exit_func
-        }
-
-    while True:
-        command = input('Enter the command: ')
-        command_words = command.strip().split(' ')
-
-        for key in COMMANDS:
-
-            if key == command_words[0].lower():
-                command_words[0] = command_words[0].lower()
-            elif command_words[0] == 'show' and command_words[1].lower() == 'all':
-                command_words[1] = command_words[1].lower()
-
-        for _ in filter(lambda x: x == '.', command_words):
-            sys.exit()
-
-        if command_words[0] in COMMANDS:
-            line = COMMANDS[command_words[0]](*command_words[1:])
-            if line:
-                print(line)
-            if line == 'goooood buy':
-                sys.exit()
-        else:
-            print('wrong command')
-
-
 def input_error(func):
     '''
     This is the Errors handling function wrapper
@@ -145,13 +107,13 @@ def phone_func(*args):
 
 
 @input_error
-def show_func(*args):
+def show_func():
     '''
     "show all". За цією командою бот виводить всі збереженні контакти
     з номерами телефонів у консоль.
     '''
-    if len(args) > 1 or args[0] != 'all':
-        raise ValueError('Wrong command. Did you mean "show all"')
+    #if len(args) > 1 or args[0] != 'all':
+        #raise ValueError('Wrong command. Did you mean "show all"')
 
     display = ''
     for name, number in CONTACTS.items():
@@ -166,8 +128,48 @@ def exit_func():
     "good bye", "close", "exit" по будь-якій з цих команд бот завершує
     свою роботу після того, як виведе у консоль "Good bye!".
     '''
-    return 'goooood buy'
+    return 'Good bye'
 
+
+
+def main():
+    '''
+    This is the main function
+    '''
+
+    COMMANDS = {
+        'hello': hello_func,
+        'add': add_func,
+        'change': change_func,
+        'phone': phone_func,
+        'show all': show_func,
+        'exit': exit_func,
+        'close': exit_func,
+        'good bye': exit_func
+        }
+
+    while True:
+        command = input('Enter the command: ')
+        command_words = command.strip().split(' ')
+
+        for _ in filter(lambda x: x == '.', command_words):
+            sys.exit()
+
+        command_words[0] = command_words[0].lower()
+
+        if len(command_words) == 2:
+            if ' '.join([command_words[0], command_words[1].lower()]) in COMMANDS:
+                command_words[0] = ' '.join([command_words[0], command_words[1].lower()])
+                del command_words[1]
+
+        if command_words[0] in COMMANDS:
+            func_reply = COMMANDS[command_words[0]](*command_words[1:])
+            if func_reply:
+                print(func_reply)
+            if func_reply == 'Good bye':
+                sys.exit()
+        else:
+            print('wrong command')
 
 
 
